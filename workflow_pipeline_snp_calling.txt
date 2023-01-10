@@ -1,0 +1,85 @@
+#SCRIPT DE ANÁLISES DE ESTRUTURA GENÉTICA E POPULACIONAIS - CHAMANDO SNPS.
+
+#MAPEAMENTO
+#REPETIR O BWA-MEM PARA TODAS AS AMOSTRAS.
+bwa mem -M longest_uces.fas /home/luca/Ocoronatus/cleandata/Onyco1/split-adapter-quality-trimmed/Onyco1-READ1.fastq.gz /home/luca/Ocoronatus/cleandata/Onyco1/split-adapter-quality-trimmed/Onyco1-READ2.fastq.gz > Onyco1_aligned.sam
+samtools view -bS Onyco1_aligned.sam > Onyco1_aligned.bam
+rm Onyco1_aligned.sam
+gatk CleanSam I=Onyco1_aligned.bam O=Onyco1_aligned-CL.bam
+rm Onyco1_aligned.bam
+gatk AddOrReplaceReadGroups I=Onyco1_aligned-CL.bam O=Onyco1_aligned-CL-RG.bam SORT_ORDER=coordinate RGPL=ILLUMINA RGPU=TestXX RGLB=Lib1 RGID=Onyco1 RGSM=Onyco1 VALIDATION_STRINGENCY=LENIENT
+rm Onyco1_aligned-CL.bam
+gatk MarkDuplicates I=Onyco1_aligned-CL-RG.bam O=Onyco1_aligned-CL-RG-MD.bam METRICS_FILE=Onyco1_aligned-CL-RG-MD.metrics MAX_FILE_HANDLES_FOR_READ_ENDS_MAP=250 ASSUME_SORTED=true REMOVE_DUPLICATES=false
+rm Onyco1_aligned-CL-RG.bam
+
+#CONCATENANDO TODOS OS ARQUIVOS .BAM GERADOS
+gatk MergeSamFiles SO=coordinate AS=TRUE I=Onyco1_aligned-CL-RG-MD.bam I=Onyco2_aligned-CL-RG-MD.bam I=Onyco3_aligned-CL-RG-MD.bam I=Onyco4_aligned-CL-RG-MD.bam I=Onyco5_aligned-CL-RG-MD.bam I=Onyco6_aligned-CL-RG-MD.bam I=Onyco7_aligned-CL-RG-MD.bam I=Onyco8_aligned-CL-RG-MD.bam I=Onyco9_aligned-CL-RG-MD.bam I=Onyco10_aligned-CL-RG-MD.bam I=Onyco11_aligned-CL-RG-MD.bam I=Onyco12_aligned-CL-RG-MD.bam I=Onyco13_aligned-CL-RG-MD.bam I=Onyco14_aligned-CL-RG-MD.bam I=Onyco15_aligned-CL-RG-MD.bam I=Onyco16_aligned-CL-RG-MD.bam I=Onyco17_aligned-CL-RG-MD.bam I=Onyco18_aligned-CL-RG-MD.bam I=Onyco19_aligned-CL-RG-MD.bam I=Onyco20_aligned-CL-RG-MD.bam I=Onyco21_aligned-CL-RG-MD.bam I=Onyco22_aligned-CL-RG-MD.bam I=Onyco23_aligned-CL-RG-MD.bam I=Onyco24_aligned-CL-RG-MD.bam I=Onyco25_aligned-CL-RG-MD.bam I=Onyco26_aligned-CL-RG-MD.bam I=Onyco27_aligned-CL-RG-MD.bam I=Onyco28_aligned-CL-RG-MD.bam I=Onyco29_aligned-CL-RG-MD.bam I=Onyco30_aligned-CL-RG-MD.bam I=Onyco31_aligned-CL-RG-MD.bam I=Onyco32_aligned-CL-RG-MD.bam I=Onyco33_aligned-CL-RG-MD.bam I=Onyco34_aligned-CL-RG-MD.bam I=Onyco35_aligned-CL-RG-MD.bam I=Onyco36_aligned-CL-RG-MD.bam I=Onyco37_aligned-CL-RG-MD.bam I=Onyco38_aligned-CL-RG-MD.bam I=Onyco39_aligned-CL-RG-MD.bam I=Onyco40_aligned-CL-RG-MD.bam I=Onyco41_aligned-CL-RG-MD.bam I=Onyco42_aligned-CL-RG-MD.bam I=Onyco43_aligned-CL-RG-MD.bam I=Onyco44_aligned-CL-RG-MD.bam I=Onyco45_aligned-CL-RG-MD.bam I=Onyco46_aligned-CL-RG-MD.bam I=Onyco47_aligned-CL-RG-MD.bam I=Onyco48_aligned-CL-RG-MD.bam I=Onyco49_aligned-CL-RG-MD.bam I=Onyco50_aligned-CL-RG-MD.bam I=Onyco51_aligned-CL-RG-MD.bam I=Onyco52_aligned-CL-RG-MD.bam I=Onyco53_aligned-CL-RG-MD.bam I=Onyco54_aligned-CL-RG-MD.bam I=Onyco55_aligned-CL-RG-MD.bam I=Onyco56_aligned-CL-RG-MD.bam I=Onyco57_aligned-CL-RG-MD.bam I=Onyco58_aligned-CL-RG-MD.bam I=Onyco59_aligned-CL-RG-MD.bam I=Onyco60_aligned-CL-RG-MD.bam I=Onyco61_aligned-CL-RG-MD.bam I=Onyco62_aligned-CL-RG-MD.bam I=Onyco63_aligned-CL-RG-MD.bam I=Onyco64_aligned-CL-RG-MD.bam I=Onyco65_aligned-CL-RG-MD.bam I=Onyco66_aligned-CL-RG-MD.bam I=Onyco67_aligned-CL-RG-MD.bam I=Onyco68_aligned-CL-RG-MD.bam I=Onyco69_aligned-CL-RG-MD.bam I=Onyco70_aligned-CL-RG-MD.bam I=Onyco71_aligned-CL-RG-MD.bam I=Onyco72_aligned-CL-RG-MD.bam I=Onyco73_aligned-CL-RG-MD.bam I=Onyco74_aligned-CL-RG-MD.bam I=Onyco75_aligned-CL-RG-MD.bam I=Onyco76_aligned-CL-RG-MD.bam I=Onyco77_aligned-CL-RG-MD.bam I=Onyco78_aligned-CL-RG-MD.bam I=Onyco79_aligned-CL-RG-MD.bam O=Todos_ONYCOS.bam
+
+#INDEXAR ARQUIVO CONTENDO TODOS OS INDIVÍDUOS
+samtools index Todos_ONYCOS.bam
+
+#Configurar java para versão 8 para o GATK 3 processar os comandos abaixo:
+sudo update-alternatives --config java 2
+
+
+#REALINHANDO AO REDOR DE INDELS
+java -Xmx8g -jar /home/luca/gatk/gatk3/GenomeAnalysisTK/GenomeAnalysisTK.jar \
+   -T RealignerTargetCreator \
+   -R longest_uces.fasta \
+   -I Todos_ONYCOS.bam \
+   --minReadsAtLocus 4 \
+   -o forIndelRealigner.intervals
+
+java -Xmx8g -jar /home/luca/gatk/gatk3/GenomeAnalysisTK/GenomeAnalysisTK.jar \
+   -T IndelRealigner \
+   -R longest_uces.fasta \
+   -I Todos_ONYCOS.bam \
+   -targetIntervals forIndelRealigner.intervals \
+   -o Todos_ONYCOS_realinhados.bam
+   
+#CHAMANDO SNPS
+java -Xmx8g -jar /home/luca/gatk/gatk3/GenomeAnalysisTK/GenomeAnalysisTK.jar \
+    -T UnifiedGenotyper \
+    -R longest_uces.fasta \
+    -I Todos_ONYCOS_realinhados.bam \
+    -gt_mode DISCOVERY \
+    -stand_call_conf 30 \
+    -stand_emit_conf 10 \
+    -o SNPS_TODOS_ONYCOS_Q30.vcf
+
+
+#ANOTANDO SNPS
+gatk VariantAnnotator -R longest_uces.fasta -I Todos_ONYCOS_realinhados.bam -G StandardAnnotation -V:variant,VCF SNPS_TODOS_ONYCOS_Q30.vcf -XA SnpEff -o SNPS_TODOS_ONYCOS_ANOTADOS_Q30.vcf
+
+
+#CHAMANDO INDELS
+java -Xmx8g -jar /home/luca/gatk/gatk3/GenomeAnalysisTK/GenomeAnalysisTK.jar \
+    -R longest_uces.fasta \
+    -T UnifiedGenotyper
+    -I Todos_ONYCOS_realinhados.bam \
+    -gt_mode DISCOVERY \
+    -glm INDEL \
+    -stand_call_conf 30 \
+    -stand_emit_conf 10 \
+    -o Todos_ONYCOS_INDELS_Q30.vcf
+
+#FILTRANDO SNPS EM RELAÇÃO AOS INDELS
+java -Xmx8g -jar /home/luca/gatk/gatk3/GenomeAnalysisTK/GenomeAnalysisTK.jar \
+    -R longest_uces.fasta \
+    -V SNPS_TODOS_ONYCOS_Q30.vcf \
+    --mask Todos_ONYCOS_INDELS_Q30.vcf \
+    --maskExtension 5 \
+    --maskName InDel \
+    --clusterWindowSize 10 \
+    --filterExpression "MQ0 >= 4 && ((MQ0 / (1.0 * DP)) > 0.1)" \
+    --filterName "validacao_ruim" \
+    --filterExpression "QUAL < 30.0" \
+    --filterName "Baixa_Qual" \
+    --filterExpression "QD < 5.0" \
+    --filterName "LowVQCBD" \
+    -o Todos_ONYCOS_FILTRADOS_Q30.vcf
+
+
+
+#OUTPUT SOMENTE DOS SNPS QUE POSSUIREM A "TAG" "PASS" NO ARQUIVO VCF
+cat Todos_SNPS_ONYCOS_FILTRADOS_Q30.vcf | grep 'PASS\|^#' > Todos_ONYCOS_FILTRADOS_APROVADOS_Q30.vcf

@@ -1,0 +1,89 @@
+#PIPELINE DAS ANÁLISES FILOGENÉTICAS
+#EM AMBIENTE LINUX:
+conda activate phyluce
+
+#ILLUMIPROCESSOR
+illumiprocessor --input ~/data/ --output ~/Ocoronatus/cleandata
+--config illumiprocessor.config --cores 27 --r1-pattern _R1 --r2-pattern _R2
+
+#agora, avaliar os resultados do illumiprocessor, fazer através do loop:
+
+for i in *; 
+do 
+phyluce_assembly_get_fastq_lengths --input $i/split-adapter-quality-trimmed/ --csv;
+done
+
+#ASSEMBLY(MONTAGEM)
+phyluce_assembly_assemblo_spades --config assembly.conf --output ~/Ocoronatus/spades_assembly --cores 27 --memory 60
+
+#ESTATÍSTICAS SUMÁRIAS DA MONTAGEM.
+for i in spades-assemblies/contigs/*.fasta; 
+do 
+	phyluce_assembly_get_fasta_lenghts --input $i --csv; 
+done
+
+
+#DANDO MATCH DAS SONDAS DAS UCES COM OS CONTIGS, REMOVENDO DUPLICATAS E PARÁLOGOS, ANOTAR MATCH DE UCEs.
+phyluce_assembly_match_contigs_to_probes --contigs spades_assemblies/contigs/ --probes ~/Ocoronatus/uce-2.5k-probes.fasta --output ~/Ocoronatus/ucecontigmatches
+
+#EXTRAÇÃO DAS UCEs
+#ARQUIVO DE CONFIGURAÇÃO A SER UTILIZADO NESSA ETAPA SE CHAMA DATASET.CONF
+#CRIANDO DIRETÓRIO PARA A ANÁLISE
+mkdir -p extraction/all
+
+#CRIA A MATRIZ INCOMPLETA
+phyluce_assembly_get_match_counts --locus-db ucecontigmatches/ --taxon-list-config dataset.conf --taxon-group 'all' --incomplete-matrix --output ~/Ocoronatus/extraction/all/all-taxa-incomplete.conf
+
+
+#A partir daqui, iremos extrair os arquivos FASTA correspondentes no output do código passado, o "all-taxa-incomplete.conf"
+
+#EXTRAINDO ARQUIVOS FASTA PARA CADA AMOSTRA
+phyluce_assembly_get_fastas_from_match_counts --contigs ~/Ocoronatus/spades-assemblies/contigs --locus-db ucecontigmatches/probe.matches.sqlite --match-count-output ~/Ocoronatus/extraction/all/all-taxa-incomplete.conf --output ~/Ocoronatus/extraction/all/all-taxa-incomplete.fasta --incomplete-matrix ~/Ocoronatus/extraction/all/all-taxa-incomplete.incomplete --log-path ~/log/
+
+#OBTENDO ARQUIVOS SEPARADOS POR UCEs
+phyluce_assembly_explode_get_fastas_file --input ~/Ocoronatus/extraction/all/all-taxa-incomplete.fasta --output ~/Ocoronatus/explosion/ --by-taxon
+
+#OBTER ESTATÍSTICAS DESCRITIVAS NO FASTA "EXPLODIDO"
+for i in explosion/*.fasta;
+do
+    phyluce_assembly_get_fasta_lengths --input $i --csv;
+done
+
+#ALINHAMENTO
+
+#EDGE-TRIMMING
+phyluce_align_seqcap_align --input ~/Ocoronatus/extraction/all/all-taxa-incomplete.fasta --output ~/Ocoronatus/mafftaligner --taxa 77 --aligner mafft --cores 20 --incomplete-matrix --log-path ~/log/
+
+#ESTATÍSTICAS DESCRITIVAS NOS ALINHAMENTOS
+phyluce_align_get_align_summary_data --alignments ~/Ocoronatus/mafftaligner/ --cores 20 --log-path ~/log/
+
+#INTERNAL-TRIMMING
+phyluce_align_seqcap_align --input ~/Ocoronatus/extraction/all/all-taxa-incomplete.fasta --output ~/Ocoronatus/internaltrimming --taxa 77 --aligner mafft --cores 20 --incomplete-matrix --output-format fasta --no-trim --log-path ~/log/
+
+#RODAR O GBLOCKS PARA REALIZAR O TRIMMING
+phyluce_align_get_gblocks_trimmed_alignments_from_untrimmed --allignments ~/Ocoronatus/internaltrimming --output ~/Ocoronatus/internaltrimming/gblocks --cores 20 --log ~/log/
+
+#NOVAMENTE, ESTATÍSTICAS DESCRITIVAS
+phyluce_align_get_align_summary_data --alignments ~/Ocoronatus/internaltrimming/gblocks/ --cores 20 --log-path ~/log/
+
+#REFORMATAÇÃO DOS ALINHAMENTOS
+phyluce_align_remove_locus_name_from_files --alignments ~/Ocoronatus/internaltrimming/gblocks --output ~/Ocoronatus/extraction/all/cleangblocks --cores 20 --log-path ~/log/
+
+#TESTANDO AS MATRIZES FINAIS
+phyluce_align_get_only_loci_with_min_taxa --alignments ~/Ocoronatus/extraction/all/cleangblocks --taxa 77 --percent 0.75 #ou 0.85 #ou 0.95 --output ~/Ocoronatus/finalmatrix75#85#95 --cores 27 --log-path ~/log/
+
+
+#CONCATENAÇÃO DAS MATRIZES PARA O RAXML
+phyluce_align_concatenate_alignments --alignments ~/Ocoronatus/finalmatrix75#85#95 --output ~/Ocoronatus/phylip75#85#95raxml --phylip --log-path ~/log/
+
+#RAXML
+#BUSCANDO A MELHOR ÁRVORE
+raxmlHPC-PTHREADS -s /home/luca/Ocoronatus/phylip75/phylip75.phylip/ -n tree -m GTRGAMMA -e 0.00001 -o Onyco79 -T 27 -w /home/luca/Ocoronatus/raxml75/tree/
+
+#CALCULANDO BOOTSTRAP.
+raxmlHPC-PTHREADS -s /home/luca/Ocoronatus/phylip75/phylip75.phylip/ -n BStree -m GTRGAMMAI -b 12345 -d -p 2352890 -N 100 -e 0.00001 -o Onyco79 -T 27 -w /home/luca/Ocoronatus/raxml75/tree/
+
+#INSERINDO SUPORTE DE BOOTSTRAP NA MELHOR ÁRVORE
+raxmlHPC-PTHREADS -f b -t bestTree -n bipartitionsMRtree -m GTRGAMMAI -z bootstrap
+
+#FIM
