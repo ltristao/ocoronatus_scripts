@@ -107,7 +107,7 @@ write.table(obs_stat_corrigido, "Observed_data_now.txt", quote=F, row.names=F, c
 #4.3 carregando as estatísticas de interesse
 tabela_nova_stats <- read.table("Observed_data_now.txt", header=T)
 
-#5. rodando a modelagem em loop
+#5. rodando a modelagem em loop - Funciona apenas no linux!
 setwd(work_dir)
 
 if (file.exists("SIMS_M1.txt")==F){
